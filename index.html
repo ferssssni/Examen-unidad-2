@@ -34,5 +34,39 @@
     </div>
 
     <script src="app.js"></script>
+    <script>
+    // Función para cargar los conceptos
+    async function cargarModulo(modulo) {
+        const contenedor = document.querySelector('main') || document.body; // Donde se mostrará la info
+        
+        if (modulo === 'conceptos') {
+            try {
+                const response = await fetch('/api/verduzco');
+                const datos = await response.json();
+                
+                // Generamos una tablita simple con los datos
+                let html = '<h2>Lista de Conceptos (Ferretería Verduzco)</h2><table border="1"><tr><th>Clave</th><th>Descripción</th></tr>';
+                datos.forEach(item => {
+                    html += `<tr><td>${item.clave}</td><td>${item.descripcion}</td></tr>`;
+                });
+                html += '</table>';
+                
+                contenedor.innerHTML = html;
+            } catch (error) {
+                contenedor.innerHTML = '<p>Error al conectar con la base de datos.</p>';
+            }
+        }
+    }
+
+    // Escuchar los clics del menú
+    document.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', (e) => {
+            if (e.target.innerText === 'Conceptos') {
+                e.preventDefault();
+                cargarModulo('conceptos');
+            }
+        });
+    });
+</script>
 </body>
 </html>
