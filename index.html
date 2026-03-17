@@ -2,71 +2,97 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Almacén</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Sistema de Almacén - Dashboard</title>
+    <style>
+        body { font-family: sans-serif; margin: 0; display: flex; }
+        nav { width: 250px; background: #333; color: white; height: 100vh; padding: 20px; }
+        nav a { display: block; color: white; text-decoration: none; padding: 10px; margin: 5px 0; border-radius: 4px; }
+        nav a:hover { background: #555; cursor: pointer; }
+        main { flex-grow: 1; padding: 40px; background: #f4f4f4; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background: #eee; }
+        .form-box { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+    </style>
 </head>
-<body class="bg-light">
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="#">Sistema Almacén</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" onclick="mostrarSeccion('conceptos')">Conceptos</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" onclick="mostrarSeccion('destinos')">Destinos</a>
-                    </li>
-                    </ul>
-            </div>
-        </div>
-    </nav>
+<body>
 
-    <div id="main-content" class="container">
-        <div class="text-center mt-5">
-            <h2>Bienvenido al Dashboard</h2>
-            <p>Selecciona una opción del menú para comenzar.</p>
-        </div>
-    </div>
+<nav>
+    <h2>Dashboard</h2>
+    <hr>
+    <strong>CATÁLOGOS</strong>
+    <a onclick="cargarModulo('conceptos')">Conceptos</a>
+    <a onclick="cargarModulo('destinos')">Destinos</a>
+    <a onclick="cargarModulo('productos')">Productos</a>
+    <a onclick="cargarModulo('unidades')">Unidades de Medida</a>
+    <br>
+    <strong>DOCUMENTOS</strong>
+    <a onclick="alert('Solo interfaz por ahora')">Entradas</a>
+    <a onclick="alert('Solo interfaz por ahora')">Salidas</a>
+</nav>
 
-    <script src="app.js"></script>
-    <script>
-    // Función para cargar los conceptos
+<main id="contenido">
+    <h1>Bienvenido al Sistema de Almacén</h1>
+    <p>Selecciona una opción del menú para gestionar los datos en tiempo real.</p>
+</main>
+
+<script>
     async function cargarModulo(modulo) {
-        const contenedor = document.querySelector('main') || document.body; // Donde se mostrará la info
-        
-        if (modulo === 'conceptos') {
-            try {
-                const response = await fetch('/api/verduzco');
-                const datos = await response.json();
-                
-                // Generamos una tablita simple con los datos
-                let html = '<h2>Lista de Conceptos (Ferretería Verduzco)</h2><table border="1"><tr><th>Clave</th><th>Descripción</th></tr>';
-                datos.forEach(item => {
-                    html += `<tr><td>${item.clave}</td><td>${item.descripcion}</td></tr>`;
+        const contenedor = document.getElementById('contenido');
+        contenedor.innerHTML = '<h1>Cargando...</h1>';
+
+        try {
+            const res = await fetch(`/api/${modulo}`);
+            const datos = await res.json();
+
+            let html = `<h1>Módulo: ${modulo.charAt(0).toUpperCase() + modulo.slice(1)}</h1>`;
+            
+            // Formulario para agregar nuevos (Persistencia para el video)
+            html += `
+                <div class="form-box">
+                    <h3>Agregar Nuevo Registro</h3>
+                    <input type="text" id="nuevoNombre" placeholder="Nombre o Descripción">
+                    <button onclick="guardarDato('${modulo}')">Guardar</button>
+                </div>`;
+
+            if (datos.length === 0) {
+                html += '<p>No hay registros disponibles.</p>';
+            } else {
+                html += '<table><thead><tr>';
+                Object.keys(datos[0]).forEach(key => html += `<th>${key.toUpperCase()}</th>`);
+                html += '</tr></thead><tbody>';
+                datos.forEach(fila => {
+                    html += '<tr>' + Object.values(fila).map(v => `<td>${v}</td>`).join('') + '</tr>';
                 });
-                html += '</table>';
-                
-                contenedor.innerHTML = html;
-            } catch (error) {
-                contenedor.innerHTML = '<p>Error al conectar con la base de datos.</p>';
+                html += '</tbody></table>';
             }
+            contenedor.innerHTML = html;
+        } catch (error) {
+            contenedor.innerHTML = '<h1>Error</h1><p>No se pudo conectar con la base de datos en la nube.</p>';
         }
     }
 
-    // Escuchar los clics del menú
-    document.querySelectorAll('a').forEach(link => {
-        link.addEventListener('click', (e) => {
-            if (e.target.innerText === 'Conceptos') {
-                e.preventDefault();
-                cargarModulo('conceptos');
-            }
+    async function guardarDato(modulo) {
+        const valor = document.getElementById('nuevoNombre').value;
+        if (!valor) return alert('Ingresa un valor');
+
+        // Construir objeto según la tabla
+        let body = {};
+        if (modulo === 'conceptos') {
+            body = { clave: Math.floor(Math.random()*900)+100, descripcion: valor, proveedor: 'Ferreteria Verduzco' };
+        } else {
+            body = { nombre: valor };
+        }
+
+        await fetch(`/api/${modulo}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
         });
-    });
+
+        cargarModulo(modulo); // Refrescar tabla automáticamente
+    }
 </script>
+
 </body>
 </html>
