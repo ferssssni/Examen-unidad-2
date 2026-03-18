@@ -4,53 +4,113 @@
     <meta charset="UTF-8">
     <title>Almacén Pro</title>
     <style>
-        body { font-family: sans-serif; display: flex; margin: 0; background: #f0f2f5; }
+        body { font-family: 'Segoe UI', sans-serif; display: flex; margin: 0; background: #f0f2f5; }
         nav { width: 220px; background: #1a202c; color: white; height: 100vh; padding: 20px; position: fixed; }
-        nav a { display: block; color: #cbd5e0; padding: 12px; cursor: pointer; text-decoration: none; margin-bottom: 5px; border-radius: 4px; }
+        nav h2 { color: #63b3ed; border-bottom: 1px solid #2d3748; padding-bottom: 10px; }
+        nav a { display: block; color: #cbd5e0; padding: 12px; cursor: pointer; text-decoration: none; border-radius: 5px; margin-bottom: 5px;}
         nav a:hover { background: #2d3748; color: white; }
         main { margin-left: 260px; padding: 40px; width: 100%; }
-        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        input { padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin: 5px; }
-        button { padding: 8px 16px; background: #3182ce; color: white; border: none; border-radius: 4px; cursor: pointer; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
-        th, td { border: 1px solid #edf2f7; padding: 12px; text-align: left; }
+        .card { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        input, select { padding: 10px; border: 1px solid #e2e8f0; border-radius: 5px; margin: 5px; width: 200px; }
+        button { padding: 10px 20px; background: #3182ce; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #edf2f7; }
+        th { background: #f7fafc; color: #4a5568; }
     </style>
 </head>
 <body>
     <nav>
         <h2>ALMACÉN</h2>
-        <a onclick="ver('proveedores')">Proveedores</a>
-        <a onclick="ver('productos')">Productos</a>
-        <a onclick="ver('unidades')">Unidades</a>
-        <a onclick="ver('conceptos')">Conceptos</a>
-        <a onclick="ver('destinos')">Destinos</a>
+        <a onclick="ver('proveedores')">🏢 Proveedores</a>
+        <a onclick="ver('productos')">📦 Productos</a>
+        <a onclick="ver('unidades')">📏 Unidades</a>
+        <a onclick="ver('conceptos')">📝 Conceptos</a>
+        <a onclick="ver('destinos')">📍 Destinos</a>
     </nav>
-    <main id="cont"><h1>Cargando sistema...</h1></main>
+    <main id="cont">
+        <h1>Bienvenido al Sistema</h1>
+        <p>Selecciona una categoría para gestionar los datos.</p>
+    </main>
 
 <script>
 async function ver(cat) {
+    const main = document.getElementById('cont');
+    main.innerHTML = '<h2>Cargando...</h2>';
+    
     const res = await fetch(`/api/${cat}`);
     const datos = await res.json();
-    let form = `<div class="card"><h3>Nuevo ${cat}</h3>`;
     
+    let html = `<h1>Gestión de ${cat.toUpperCase()}</h1><div class="card">`;
+    
+    // FORMULARIOS DINÁMICOS SEGÚN LA CATEGORÍA
     if(cat === 'proveedores') {
-        form += `<input id="i1" placeholder="RFC"><input id="i2" placeholder="Nombre Com."><input id="i3" placeholder="Razón Social"><button onclick="addP()">Guardar</button>`;
+        html += `
+            <input id="f1" placeholder="RFC">
+            <input id="f2" placeholder="Nombre Comercial">
+            <input id="f3" placeholder="Razón Social">
+            <button onclick="guardarProv()">Guardar Proveedor</button>`;
+    } else if(cat === 'productos') {
+        html += `
+            <input id="f1" placeholder="Cód. Barras">
+            <input id="f2" placeholder="Nombre Producto">
+            <input id="f3" type="number" placeholder="Precio Compra">
+            <button onclick="guardarProd()">Guardar Producto</button>`;
+    } else if(cat === 'conceptos') {
+        html += `
+            <input id="f1" placeholder="Nombre Concepto">
+            <select id="f2">
+                <option value="Entrada">Entrada</option>
+                <option value="Salida">Salida</option>
+            </select>
+            <button onclick="guardarConcepto()">Guardar Concepto</button>`;
     } else {
-        form += `<input id="i1" placeholder="Nombre"><button onclick="addS('${cat}')">Guardar</button>`;
+        html += `
+            <input id="f1" placeholder="Nombre / Descripción">
+            <button onclick="guardarSimple('${cat}')">Guardar</button>`;
     }
     
-    let tabla = `</div><table><tr>${Object.keys(datos[0] || {id:0}).map(k => `<th>${k}</th>`).join('')}</tr>`;
-    datos.forEach(f => tabla += `<tr>${Object.values(f).map(v => `<td>${v}</td>`).join('')}</tr>`);
-    document.getElementById('cont').innerHTML = `<h1>${cat.toUpperCase()}</h1>` + form + tabla + `</table>`;
+    html += `</div>`;
+
+    // TABLA DE RESULTADOS
+    let tabla = `<table><thead><tr>`;
+    if(datos.length > 0) {
+        Object.keys(datos[0]).forEach(key => tabla += `<th>${key.toUpperCase()}</th>`);
+        tabla += `</tr></thead><tbody>`;
+        datos.forEach(fila => {
+            tabla += `<tr>${Object.values(fila).map(v => `<td>${v || ''}</td>`).join('')}</tr>`;
+        });
+    } else {
+        tabla += `<th>Aviso</th></tr></thead><tbody><tr><td>No hay datos registrados.</td></tr>`;
+    }
+    
+    main.innerHTML = html + tabla + `</tbody></table>`;
 }
 
-async function addP() { await post('proveedores', { rfc: i1.value, nombre_comercial: i2.value, razon_social: i3.value }); }
-async function addS(c) { await post(c, { nombre: i1.value }); }
-async function post(c, b) { 
-    await fetch(`/api/${c}`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(b) }); 
-    ver(c); 
+// FUNCIONES DE ENVÍO ESPECÍFICAS
+async function guardarProv() {
+    await post('proveedores', { rfc: f1.value, nombre_comercial: f2.value, razon_social: f3.value });
 }
-ver('proveedores');
+
+async function guardarProd() {
+    await post('productos', { codigo_barras: f1.value, nombre: f2.value, precio_compra: f3.value });
+}
+
+async function guardarConcepto() {
+    await post('conceptos', { nombre: f1.value, tipo: f2.value });
+}
+
+async function guardarSimple(c) {
+    await post(c, { nombre: f1.value });
+}
+
+async function post(ruta, body) {
+    await fetch(`/api/${ruta}`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(body)
+    });
+    ver(ruta);
+}
 </script>
 </body>
 </html>
