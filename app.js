@@ -6,7 +6,6 @@ const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '')));
 
-// Conexión a TiDB Cloud usando variables de entorno de Vercel
 const db = mysql.createPool({
     host: process.env.DB_HOST,
     port: process.env.DB_PORT,
@@ -16,10 +15,9 @@ const db = mysql.createPool({
     ssl: { rejectUnauthorized: true }
 });
 
-const tablas = ['unidades', 'proveedores', 'productos', 'conceptos', 'destinos'];
+const catalogos = ['unidades', 'proveedores', 'productos', 'conceptos', 'destinos'];
 
-tablas.forEach(tabla => {
-    // Obtener datos
+catalogos.forEach(tabla => {
     app.get(`/api/${tabla}`, (req, res) => {
         db.query(`SELECT * FROM ${tabla}`, (err, rows) => {
             if (err) return res.status(500).json({ error: err.message });
@@ -27,7 +25,6 @@ tablas.forEach(tabla => {
         });
     });
 
-    // Insertar datos
     app.post(`/api/${tabla}`, (req, res) => {
         db.query(`INSERT INTO ${tabla} SET ?`, req.body, (err) => {
             if (err) return res.status(500).json({ error: err.message });
