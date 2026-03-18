@@ -4,62 +4,53 @@
     <meta charset="UTF-8">
     <title>Almacén Pro</title>
     <style>
-        body { font-family: sans-serif; display: flex; margin: 0; background: #f4f7f6; }
-        nav { width: 240px; background: #2c3e50; color: white; height: 100vh; padding: 20px; position: fixed; }
-        nav a { display: block; color: white; padding: 10px; cursor: pointer; text-decoration: none; margin-bottom: 5px; border-radius: 4px; }
-        nav a:hover { background: #34495e; }
-        main { margin-left: 280px; padding: 40px; width: 100%; }
-        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-        th { background: #f8f9fa; }
+        body { font-family: sans-serif; display: flex; margin: 0; background: #f0f2f5; }
+        nav { width: 220px; background: #1a202c; color: white; height: 100vh; padding: 20px; position: fixed; }
+        nav a { display: block; color: #cbd5e0; padding: 12px; cursor: pointer; text-decoration: none; margin-bottom: 5px; border-radius: 4px; }
+        nav a:hover { background: #2d3748; color: white; }
+        main { margin-left: 260px; padding: 40px; width: 100%; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        input { padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin: 5px; }
+        button { padding: 8px 16px; background: #3182ce; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
+        th, td { border: 1px solid #edf2f7; padding: 12px; text-align: left; }
     </style>
 </head>
 <body>
     <nav>
-        <h2>CATÁLOGOS</h2>
-        <a onclick="cargar('proveedores')">Proveedores</a>
-        <a onclick="cargar('productos')">Productos</a>
-        <a onclick="cargar('unidades')">Unidades</a>
-        <a onclick="cargar('conceptos')">Conceptos</a>
-        <a onclick="cargar('destinos')">Destinos</a>
+        <h2>ALMACÉN</h2>
+        <a onclick="ver('proveedores')">Proveedores</a>
+        <a onclick="ver('productos')">Productos</a>
+        <a onclick="ver('unidades')">Unidades</a>
+        <a onclick="ver('conceptos')">Conceptos</a>
+        <a onclick="ver('destinos')">Destinos</a>
     </nav>
-    <main id="app">
-        <h1>Seleccione un catálogo</h1>
-    </main>
+    <main id="cont"><h1>Cargando sistema...</h1></main>
 
 <script>
-async function cargar(seccion) {
-    const root = document.getElementById('app');
-    root.innerHTML = '<h2>Cargando...</h2>';
-    const res = await fetch(`/api/${seccion}`);
+async function ver(cat) {
+    const res = await fetch(`/api/${cat}`);
     const datos = await res.json();
-
-    let html = `<h1>Catálogo: ${seccion.toUpperCase()}</h1><div class="card">`;
+    let form = `<div class="card"><h3>Nuevo ${cat}</h3>`;
     
-    if(seccion === 'proveedores') {
-        html += `<input id="f1" placeholder="RFC"><input id="f2" placeholder="Nombre"><input id="f3" placeholder="Razón Social"><button onclick="enviarProv()">Guardar</button>`;
+    if(cat === 'proveedores') {
+        form += `<input id="i1" placeholder="RFC"><input id="i2" placeholder="Nombre Com."><input id="i3" placeholder="Razón Social"><button onclick="addP()">Guardar</button>`;
     } else {
-        html += `<input id="f1" placeholder="Nombre"><button onclick="enviarSimple('${seccion}')">Guardar</button>`;
+        form += `<input id="i1" placeholder="Nombre"><button onclick="addS('${cat}')">Guardar</button>`;
     }
     
-    html += `</div><table><tr>${Object.keys(datos[0] || {id:0}).map(k => `<th>${k}</th>`).join('')}</tr>`;
-    datos.forEach(f => html += `<tr>${Object.values(f).map(v => `<td>${v}</td>`).join('')}</tr>`);
-    root.innerHTML = html + `</table>`;
+    let tabla = `</div><table><tr>${Object.keys(datos[0] || {id:0}).map(k => `<th>${k}</th>`).join('')}</tr>`;
+    datos.forEach(f => tabla += `<tr>${Object.values(f).map(v => `<td>${v}</td>`).join('')}</tr>`);
+    document.getElementById('cont').innerHTML = `<h1>${cat.toUpperCase()}</h1>` + form + tabla + `</table>`;
 }
 
-async function enviarProv() {
-    await post('proveedores', { rfc: f1.value, nombre_comercial: f2.value, razon_social: f3.value });
+async function addP() { await post('proveedores', { rfc: i1.value, nombre_comercial: i2.value, razon_social: i3.value }); }
+async function addS(c) { await post(c, { nombre: i1.value }); }
+async function post(c, b) { 
+    await fetch(`/api/${c}`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(b) }); 
+    ver(c); 
 }
-
-async function enviarSimple(s) {
-    await post(s, { nombre: f1.value });
-}
-
-async function post(m, body) {
-    await fetch(`/api/${m}`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
-    cargar(m);
-}
+ver('proveedores');
 </script>
 </body>
 </html>
