@@ -15,18 +15,17 @@ const db = mysql.createPool({
     ssl: { rejectUnauthorized: true }
 });
 
-const catalogos = ['unidades', 'proveedores', 'productos', 'conceptos', 'destinos'];
+const tablas = ['unidades', 'proveedores', 'productos', 'conceptos', 'destinos'];
 
-catalogos.forEach(tabla => {
-    app.get(`/api/${tabla}`, (req, res) => {
-        db.query(`SELECT * FROM ${tabla}`, (err, rows) => {
+tablas.forEach(t => {
+    app.get(`/api/${t}`, (req, res) => {
+        db.query(`SELECT * FROM ${t}`, (err, rows) => {
             if (err) return res.status(500).json({ error: err.message });
             res.json(rows);
         });
     });
-
-    app.post(`/api/${tabla}`, (req, res) => {
-        db.query(`INSERT INTO ${tabla} SET ?`, req.body, (err) => {
+    app.post(`/api/${t}`, (req, res) => {
+        db.query(`INSERT INTO ${t} SET ?`, req.body, (err) => {
             if (err) return res.status(500).json({ error: err.message });
             res.json({ success: true });
         });
@@ -37,4 +36,4 @@ app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-module.exports = app;
+module.exports = app; // OBLIGATORIO PARA VERCEL
