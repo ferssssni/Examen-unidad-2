@@ -2,70 +2,63 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Sistema Almacén Pro</title>
+    <title>Almacén Pro</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; display: flex; margin: 0; background: #f0f2f5; }
-        nav { width: 220px; background: #1a202c; color: white; height: 100vh; padding: 20px; position: fixed; }
-        nav h2 { color: #63b3ed; border-bottom: 1px solid #2d3748; padding-bottom: 10px; }
-        nav a { display: block; color: #cbd5e0; padding: 12px; cursor: pointer; text-decoration: none; border-radius: 5px; }
-        nav a:hover { background: #2d3748; color: white; }
-        main { margin-left: 260px; padding: 40px; width: calc(100% - 260px); }
-        .card { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        input { padding: 10px; border: 1px solid #e2e8f0; border-radius: 5px; margin: 5px; width: 200px; }
-        button { padding: 10px 20px; background: #3182ce; color: white; border: none; border-radius: 5px; cursor: pointer; }
-        table { width: 100%; border-collapse: collapse; background: white; margin-top: 20px; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #edf2f7; }
-        th { background: #f7fafc; }
+        body { font-family: sans-serif; display: flex; margin: 0; background: #f4f7f6; }
+        nav { width: 240px; background: #2c3e50; color: white; height: 100vh; padding: 20px; position: fixed; }
+        nav a { display: block; color: white; padding: 10px; cursor: pointer; text-decoration: none; margin-bottom: 5px; border-radius: 4px; }
+        nav a:hover { background: #34495e; }
+        main { margin-left: 280px; padding: 40px; width: 100%; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background: #f8f9fa; }
     </style>
 </head>
 <body>
     <nav>
-        <h2>ALMACÉN</h2>
-        <a onclick="navegar('proveedores')">🏢 Proveedores</a>
-        <a onclick="navegar('productos')">📦 Productos</a>
-        <a onclick="navegar('unidades')">📏 Unidades</a>
-        <a onclick="navegar('conceptos')">📝 Conceptos</a>
-        <a onclick="navegar('destinos')">📍 Destinos</a>
+        <h2>CATÁLOGOS</h2>
+        <a onclick="cargar('proveedores')">Proveedores</a>
+        <a onclick="cargar('productos')">Productos</a>
+        <a onclick="cargar('unidades')">Unidades</a>
+        <a onclick="cargar('conceptos')">Conceptos</a>
+        <a onclick="cargar('destinos')">Destinos</a>
     </nav>
     <main id="app">
-        <h1>Panel de Control</h1>
-        <p>Seleccione una opción del menú para gestionar los movimientos del almacén.</p>
+        <h1>Seleccione un catálogo</h1>
     </main>
 
 <script>
-async function navegar(mod) {
+async function cargar(seccion) {
     const root = document.getElementById('app');
-    root.innerHTML = '<h3>Cargando datos...</h3>';
-    const res = await fetch(`/api/${mod}`);
+    root.innerHTML = '<h2>Cargando...</h2>';
+    const res = await fetch(`/api/${seccion}`);
     const datos = await res.json();
 
-    let html = `<h1>Gestión de ${mod.toUpperCase()}</h1><div class="card">`;
-    if(mod === 'proveedores') {
-        html += `<input id="i1" placeholder="RFC"><input id="i2" placeholder="Nombre Comercial"><input id="i3" placeholder="Razón Social"><button onclick="guardarProv()">Registrar</button>`;
-    } else if(mod === 'productos') {
-        html += `<input id="i1" placeholder="Código de Barras"><input id="i2" placeholder="Nombre"><input id="i3" type="number" placeholder="Precio"><button onclick="guardarProd()">Registrar</button>`;
+    let html = `<h1>Catálogo: ${seccion.toUpperCase()}</h1><div class="card">`;
+    
+    if(seccion === 'proveedores') {
+        html += `<input id="f1" placeholder="RFC"><input id="f2" placeholder="Nombre"><input id="f3" placeholder="Razón Social"><button onclick="enviarProv()">Guardar</button>`;
     } else {
-        html += `<input id="i1" placeholder="Nombre / Descripción"><button onclick="guardarSimple('${mod}')">Registrar</button>`;
+        html += `<input id="f1" placeholder="Nombre"><button onclick="enviarSimple('${seccion}')">Guardar</button>`;
     }
-    html += `</div>`;
-
-    let tabla = `<table><tr>${Object.keys(datos[0] || {id:0}).map(k => `<th>${k.toUpperCase()}</th>`).join('')}</tr>`;
-    datos.forEach(f => tabla += `<tr>${Object.values(f).map(v => `<td>${v}</td>`).join('')}</tr>`);
-    root.innerHTML = html + tabla + `</table>`;
+    
+    html += `</div><table><tr>${Object.keys(datos[0] || {id:0}).map(k => `<th>${k}</th>`).join('')}</tr>`;
+    datos.forEach(f => html += `<tr>${Object.values(f).map(v => `<td>${v}</td>`).join('')}</tr>`);
+    root.innerHTML = html + `</table>`;
 }
 
-async function guardarProv() {
-    await post('proveedores', { rfc: i1.value, nombre_comercial: i2.value, razon_social: i3.value });
+async function enviarProv() {
+    await post('proveedores', { rfc: f1.value, nombre_comercial: f2.value, razon_social: f3.value });
 }
-async function guardarProd() {
-    await post('productos', { codigo_barras: i1.value, nombre: i2.value, precio_compra: i3.value });
+
+async function enviarSimple(s) {
+    await post(s, { nombre: f1.value });
 }
-async function guardarSimple(m) {
-    await post(m, { nombre: i1.value });
-}
-async function post(m, b) {
-    await fetch(`/api/${m}`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(b) });
-    navegar(m);
+
+async function post(m, body) {
+    await fetch(`/api/${m}`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+    cargar(m);
 }
 </script>
 </body>
