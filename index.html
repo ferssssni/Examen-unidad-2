@@ -4,79 +4,79 @@
     <meta charset="UTF-8">
     <title>Sistema Almacén Pro</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; display: flex; margin: 0; background: #f0f2f5; }
-        nav { width: 220px; background: #1a202c; color: white; height: 100vh; padding: 20px; position: fixed; }
-        nav h2 { color: #63b3ed; font-size: 1.2rem; }
-        nav a { display: block; color: #cbd5e0; padding: 12px; cursor: pointer; text-decoration: none; border-radius: 5px; }
-        nav a:hover { background: #2d3748; color: white; }
+        body { font-family: sans-serif; display: flex; margin: 0; background: #f4f7f6; }
+        nav { width: 220px; background: #2c3e50; color: white; height: 100vh; padding: 20px; position: fixed; }
+        nav a { display: block; color: white; padding: 12px; cursor: pointer; text-decoration: none; margin-bottom: 5px; border-radius: 4px; }
+        nav a:hover { background: #34495e; }
         main { margin-left: 260px; padding: 40px; width: 100%; }
-        .form-group { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #edf2f7; }
-        th { background: #edf2f7; color: #4a5568; }
-        input { padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px; margin-right: 10px; margin-bottom: 10px; }
-        button { padding: 8px 16px; background: #3182ce; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; background: white; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background: #eee; }
+        input { padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin: 5px; }
+        button { padding: 10px 20px; background: #27ae60; color: white; border: none; border-radius: 4px; cursor: pointer; }
     </style>
 </head>
 <body>
     <nav>
-        <h2>ALMACÉN</h2>
-        <a onclick="navegar('proveedores')">🏢 Proveedores</a>
-        <a onclick="navegar('unidades')">📏 Unidades</a>
-        <a onclick="navegar('productos')">📦 Productos</a>
-        <a onclick="navegar('conceptos')">📝 Conceptos</a>
-        <a onclick="navegar('destinos')">📍 Destinos</a>
+        <h3>DASHBOARD</h3>
+        <a onclick="navegar('proveedores')">Proveedores</a>
+        <a onclick="navegar('productos')">Productos</a>
+        <a onclick="navegar('unidades')">Unidades</a>
+        <a onclick="navegar('conceptos')">Conceptos</a>
+        <a onclick="navegar('destinos')">Destinos</a>
     </nav>
-    <main id="view">
-        <h1>Bienvenido al Dashboard</h1>
-        <p>Selecciona un catálogo para gestionar la información.</p>
+    <main id="app">
+        <h1>Bienvenido</h1>
+        <p>Selecciona un catálogo del menú lateral.</p>
     </main>
 
 <script>
 async function navegar(modulo) {
-    const view = document.getElementById('view');
-    view.innerHTML = '<h2>Cargando módulo...</h2>';
+    const root = document.getElementById('app');
+    root.innerHTML = '<h2>Cargando...</h2>';
     
-    try {
-        const res = await fetch(`/api/${modulo}`);
-        const datos = await res.json();
+    const res = await fetch(`/api/${modulo}`);
+    const datos = await res.json();
 
-        let form = `<div class="form-group"><h3>Nuevo Registro: ${modulo}</h3>`;
-        if(modulo === 'proveedores') {
-            form += `<input id="r1" placeholder="RFC"><input id="r2" placeholder="Nombre Com."><input id="r3" placeholder="Razón Social"><button onclick="saveProv()">Guardar</button>`;
-        } else if(modulo === 'productos') {
-            form += `<input id="p1" placeholder="Código Barras"><input id="p2" placeholder="Nombre"><input id="p3" placeholder="Precio Compra" type="number"><button onclick="saveProd()">Guardar</button>`;
-        } else {
-            form += `<input id="s1" placeholder="Nombre / Descripción"><button onclick="saveSimple('${modulo}')">Guardar</button>`;
-        }
-        form += `</div>`;
-
-        let tabla = `<table><thead><tr>${Object.keys(datos[0] || {id:0}).map(k => `<th>${k.toUpperCase()}</th>`).join('')}</tr></thead><tbody>`;
-        datos.forEach(f => tabla += `<tr>${Object.values(f).map(v => `<td>${v}</td>`).join('')}</tr>`);
-        
-        view.innerHTML = `<h1>Gestión de ${modulo}</h1>` + form + tabla + `</tbody></table>`;
-    } catch (e) {
-        view.innerHTML = `<h2 style="color:red">Error: No se pudo conectar a la base de datos.</h2>`;
+    let html = `<h1>Catálogo de ${modulo.toUpperCase()}</h1><div class="card">`;
+    
+    if(modulo === 'proveedores') {
+        html += `
+            <input id="v1" placeholder="RFC">
+            <input id="v2" placeholder="Nombre Comercial">
+            <input id="v3" placeholder="Razón Social">
+            <button onclick="saveProv()">Guardar Proveedor</button>`;
+    } else if(modulo === 'productos') {
+        html += `
+            <input id="p1" placeholder="Código de Barras">
+            <input id="p2" placeholder="Nombre del Producto">
+            <input id="p3" type="number" placeholder="Precio Compra">
+            <button onclick="saveProd()">Guardar Producto</button>`;
+    } else {
+        html += `<input id="s1" placeholder="Nombre"><button onclick="saveSimple('${modulo}')">Guardar</button>`;
     }
+    
+    html += `</div><table><tr>${Object.keys(datos[0] || {id:0}).map(k => `<th>${k}</th>`).join('')}</tr>`;
+    datos.forEach(f => html += `<tr>${Object.values(f).map(v => `<td>${v}</td>`).join('')}</tr>`);
+    root.innerHTML = html + `</table>`;
 }
 
 async function saveProv() {
-    const body = { rfc: r1.value, nombre_comercial: r2.value, razon_social: r3.value };
-    await send('proveedores', body);
+    await post('proveedores', { rfc: v1.value, nombre_comercial: v2.value, razon_social: v3.value });
 }
 
 async function saveProd() {
-    const body = { codigo_barras: p1.value, nombre: p2.value, precio_compra: p3.value };
-    await send('productos', body);
+    await post('productos', { codigo_barras: p1.value, nombre: p2.value, precio_compra: p3.value });
 }
 
-async function saveSimple(mod) {
-    await send(mod, { nombre: s1.value });
+async function saveSimple(m) {
+    await post(m, { nombre: s1.value });
 }
 
-async function send(mod, data) {
-    await fetch(`/api/${mod}`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) });
-    navegar(mod);
+async function post(m, b) {
+    await fetch(`/api/${m}`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(b) });
+    navegar(m);
 }
 </script>
 </body>
