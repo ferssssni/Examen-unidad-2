@@ -18,7 +18,6 @@ const db = mysql.createPool({
 const catalogos = ['unidades', 'proveedores', 'productos', 'conceptos', 'destinos'];
 
 catalogos.forEach(tabla => {
-    // Leer datos
     app.get(`/api/${tabla}`, (req, res) => {
         db.query(`SELECT * FROM ${tabla}`, (err, rows) => {
             if (err) return res.status(500).json({ error: err.message });
@@ -26,7 +25,6 @@ catalogos.forEach(tabla => {
         });
     });
 
-    // Guardar datos
     app.post(`/api/${tabla}`, (req, res) => {
         db.query(`INSERT INTO ${tabla} SET ?`, req.body, (err) => {
             if (err) return res.status(500).json({ error: err.message });
@@ -35,7 +33,7 @@ catalogos.forEach(tabla => {
     });
 });
 
-// Solución al error 404: Servir siempre el index.html
+// Redirección para evitar error 404 en refresco
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
