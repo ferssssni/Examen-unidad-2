@@ -2,97 +2,82 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Sistema de Almacén - Dashboard</title>
+    <title>Sistema Almacén Pro</title>
     <style>
-        body { font-family: sans-serif; margin: 0; display: flex; }
-        nav { width: 250px; background: #333; color: white; height: 100vh; padding: 20px; }
-        nav a { display: block; color: white; text-decoration: none; padding: 10px; margin: 5px 0; border-radius: 4px; }
-        nav a:hover { background: #555; cursor: pointer; }
-        main { flex-grow: 1; padding: 40px; background: #f4f4f4; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
-        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-        th { background: #eee; }
-        .form-box { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        body { font-family: 'Segoe UI', sans-serif; display: flex; margin: 0; background: #f0f2f5; }
+        nav { width: 220px; background: #1a202c; color: white; height: 100vh; padding: 20px; position: fixed; }
+        nav h2 { color: #63b3ed; font-size: 1.2rem; }
+        nav a { display: block; color: #cbd5e0; padding: 12px; cursor: pointer; text-decoration: none; border-radius: 5px; }
+        nav a:hover { background: #2d3748; color: white; }
+        main { margin-left: 260px; padding: 40px; width: 100%; }
+        .form-group { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #edf2f7; }
+        th { background: #edf2f7; color: #4a5568; }
+        input { padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px; margin-right: 10px; margin-bottom: 10px; }
+        button { padding: 8px 16px; background: #3182ce; color: white; border: none; border-radius: 4px; cursor: pointer; }
     </style>
 </head>
 <body>
-
-<nav>
-    <h2>Dashboard</h2>
-    <hr>
-    <strong>CATÁLOGOS</strong>
-    <a onclick="cargarModulo('conceptos')">Conceptos</a>
-    <a onclick="cargarModulo('destinos')">Destinos</a>
-    <a onclick="cargarModulo('productos')">Productos</a>
-    <a onclick="cargarModulo('unidades')">Unidades de Medida</a>
-    <br>
-    <strong>DOCUMENTOS</strong>
-    <a onclick="alert('Solo interfaz por ahora')">Entradas</a>
-    <a onclick="alert('Solo interfaz por ahora')">Salidas</a>
-</nav>
-
-<main id="contenido">
-    <h1>Bienvenido al Sistema de Almacén</h1>
-    <p>Selecciona una opción del menú para gestionar los datos en tiempo real.</p>
-</main>
+    <nav>
+        <h2>ALMACÉN</h2>
+        <a onclick="navegar('proveedores')">🏢 Proveedores</a>
+        <a onclick="navegar('unidades')">📏 Unidades</a>
+        <a onclick="navegar('productos')">📦 Productos</a>
+        <a onclick="navegar('conceptos')">📝 Conceptos</a>
+        <a onclick="navegar('destinos')">📍 Destinos</a>
+    </nav>
+    <main id="view">
+        <h1>Bienvenido al Dashboard</h1>
+        <p>Selecciona un catálogo para gestionar la información.</p>
+    </main>
 
 <script>
-    async function cargarModulo(modulo) {
-        const contenedor = document.getElementById('contenido');
-        contenedor.innerHTML = '<h1>Cargando...</h1>';
+async function navegar(modulo) {
+    const view = document.getElementById('view');
+    view.innerHTML = '<h2>Cargando módulo...</h2>';
+    
+    try {
+        const res = await fetch(`/api/${modulo}`);
+        const datos = await res.json();
 
-        try {
-            const res = await fetch(`/api/${modulo}`);
-            const datos = await res.json();
-
-            let html = `<h1>Módulo: ${modulo.charAt(0).toUpperCase() + modulo.slice(1)}</h1>`;
-            
-            // Formulario para agregar nuevos (Persistencia para el video)
-            html += `
-                <div class="form-box">
-                    <h3>Agregar Nuevo Registro</h3>
-                    <input type="text" id="nuevoNombre" placeholder="Nombre o Descripción">
-                    <button onclick="guardarDato('${modulo}')">Guardar</button>
-                </div>`;
-
-            if (datos.length === 0) {
-                html += '<p>No hay registros disponibles.</p>';
-            } else {
-                html += '<table><thead><tr>';
-                Object.keys(datos[0]).forEach(key => html += `<th>${key.toUpperCase()}</th>`);
-                html += '</tr></thead><tbody>';
-                datos.forEach(fila => {
-                    html += '<tr>' + Object.values(fila).map(v => `<td>${v}</td>`).join('') + '</tr>';
-                });
-                html += '</tbody></table>';
-            }
-            contenedor.innerHTML = html;
-        } catch (error) {
-            contenedor.innerHTML = '<h1>Error</h1><p>No se pudo conectar con la base de datos en la nube.</p>';
-        }
-    }
-
-    async function guardarDato(modulo) {
-        const valor = document.getElementById('nuevoNombre').value;
-        if (!valor) return alert('Ingresa un valor');
-
-        // Construir objeto según la tabla
-        let body = {};
-        if (modulo === 'conceptos') {
-            body = { clave: Math.floor(Math.random()*900)+100, descripcion: valor, proveedor: 'Ferreteria Verduzco' };
+        let form = `<div class="form-group"><h3>Nuevo Registro: ${modulo}</h3>`;
+        if(modulo === 'proveedores') {
+            form += `<input id="r1" placeholder="RFC"><input id="r2" placeholder="Nombre Com."><input id="r3" placeholder="Razón Social"><button onclick="saveProv()">Guardar</button>`;
+        } else if(modulo === 'productos') {
+            form += `<input id="p1" placeholder="Código Barras"><input id="p2" placeholder="Nombre"><input id="p3" placeholder="Precio Compra" type="number"><button onclick="saveProd()">Guardar</button>`;
         } else {
-            body = { nombre: valor };
+            form += `<input id="s1" placeholder="Nombre / Descripción"><button onclick="saveSimple('${modulo}')">Guardar</button>`;
         }
+        form += `</div>`;
 
-        await fetch(`/api/${modulo}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body)
-        });
-
-        cargarModulo(modulo); // Refrescar tabla automáticamente
+        let tabla = `<table><thead><tr>${Object.keys(datos[0] || {id:0}).map(k => `<th>${k.toUpperCase()}</th>`).join('')}</tr></thead><tbody>`;
+        datos.forEach(f => tabla += `<tr>${Object.values(f).map(v => `<td>${v}</td>`).join('')}</tr>`);
+        
+        view.innerHTML = `<h1>Gestión de ${modulo}</h1>` + form + tabla + `</tbody></table>`;
+    } catch (e) {
+        view.innerHTML = `<h2 style="color:red">Error: No se pudo conectar a la base de datos.</h2>`;
     }
-</script>
+}
 
+async function saveProv() {
+    const body = { rfc: r1.value, nombre_comercial: r2.value, razon_social: r3.value };
+    await send('proveedores', body);
+}
+
+async function saveProd() {
+    const body = { codigo_barras: p1.value, nombre: p2.value, precio_compra: p3.value };
+    await send('productos', body);
+}
+
+async function saveSimple(mod) {
+    await send(mod, { nombre: s1.value });
+}
+
+async function send(mod, data) {
+    await fetch(`/api/${mod}`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) });
+    navegar(mod);
+}
+</script>
 </body>
 </html>
